@@ -15,5 +15,6 @@ func init() {
 func main() {
 	r := gin.Default()
 	r.POST("/signup", contollers.Signup)
+	r.POST("/login", contollers.Login)
 	r.Run()
 }
