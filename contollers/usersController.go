@@ -98,5 +98,28 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		// "token": tokenString,
 	})
+}
 
+// func Validate(c *gin.Context) {
+// 	user, _ : c.Get("user")
+
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"message": user,
+// 	})
+// }
+
+func Validate(c *gin.Context) {
+	// Extract the user information from the context
+	user, _ := c.Get("user")
+	// if !exists {
+	//     c.JSON(http.StatusUnauthorized, gin.H{
+	//         "error": "Unauthorized",
+	//     })
+	//     return
+	// }
+
+	// User information exists, so send it in the response
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
 }
