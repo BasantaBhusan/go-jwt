@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/BasantaBhusan/go-jwt/contollers"
+	"github.com/BasantaBhusan/go-jwt/docs"
 	"github.com/BasantaBhusan/go-jwt/initializers"
-	"github.com/BasantaBhusan/go-jwt/middleware"
+	"github.com/BasantaBhusan/go-jwt/routers"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func init() {
@@ -14,9 +16,12 @@ func init() {
 }
 
 func main() {
+	docs.SwaggerInfo.BasePath = "/"
 	r := gin.Default()
-	r.POST("/signup", contollers.Signup)
-	r.POST("/login", contollers.Login)
-	r.GET("/validate", middleware.RequireAuth, contollers.Validate)
+	routers.InitializeRoutes(r)
+	url := ginSwagger.URL("http://localhost:3000/swagger/doc.json")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url, func(c *ginSwagger.Config) {
+		c.DefaultModelsExpandDepth = -1
+	}))
 	r.Run()
 }
