@@ -73,6 +73,7 @@ func Createkyc(c *gin.Context) {
 	}
 
 	address := models.Address{
+		UserID:       uint(userIDUint),
 		Province:     body.Address.Province,
 		District:     body.Address.District,
 		Municipality: body.Address.Municipality,
@@ -80,6 +81,7 @@ func Createkyc(c *gin.Context) {
 	}
 
 	workingArea := models.WorkingArea{
+		UserID:   uint(userIDUint),
 		AreaName: body.WorkingArea.AreaName,
 	}
 
@@ -89,6 +91,9 @@ func Createkyc(c *gin.Context) {
 	}
 
 	service := models.Service{
+
+		UserID: uint(userIDUint),
+
 		ServiceName: models.ServiceType(body.Service.ServiceName),
 	}
 

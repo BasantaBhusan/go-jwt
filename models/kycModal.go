@@ -8,17 +8,15 @@ type Kyc struct {
 	FullName       string
 	MobileNumber   string
 	FirmRegistered bool
-	AddressID      uint
 	Address        Address
-	WorkingAreaID  uint
 	WorkingArea    WorkingArea
-	ServiceID      uint
 	Service        Service
 }
 
 type Address struct {
 	gorm.Model
 	UserID       uint
+	KycID        uint
 	Province     string
 	District     string
 	Municipality string
@@ -28,6 +26,7 @@ type Address struct {
 type WorkingArea struct {
 	gorm.Model
 	UserID     uint `gorm:"not null"`
+	KycID      uint
 	AreaName   string
 	Activities []Activity
 }
@@ -35,6 +34,7 @@ type WorkingArea struct {
 type Activity struct {
 	gorm.Model
 	WorkingAreaID uint
+	KycID         uint
 	ActivityName  string
 }
 
@@ -53,7 +53,9 @@ const (
 type Service struct {
 	gorm.Model
 	UserID      uint `gorm:"not null"`
+	KycID       uint
 	ServiceName ServiceType
+	Investment  InvestmentOption
 }
 
 type InvestmentOption string
@@ -66,8 +68,3 @@ const (
 	UpTo1CRORE  InvestmentOption = "up to 1 Crore"
 	Above1CRORE InvestmentOption = "above 1 Crore"
 )
-
-type Investment struct {
-	gorm.Model
-	Option InvestmentOption
-}
