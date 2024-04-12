@@ -8,4 +8,5 @@ type User struct {
 	Password       string `gorm:"not null" json:"password" binding:"required"`
 	ProfilePicture string `json:"profile_picture"`
 	IsKyc          bool   `gorm:"default:false" json:"is_kyc"`
+	Kyc            *Kyc   `gorm:"foreignKey:UserID"`
 }

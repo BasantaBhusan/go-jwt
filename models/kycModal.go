@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Kyc struct {
 	gorm.Model
+	UserID         uint `gorm:"not null"`
 	FullName       string
 	MobileNumber   string
 	FirmRegistered bool
@@ -26,7 +27,7 @@ type Address struct {
 
 type WorkingArea struct {
 	gorm.Model
-	UserID     uint
+	UserID     uint `gorm:"not null"`
 	AreaName   string
 	Activities []Activity
 }
@@ -51,7 +52,7 @@ const (
 
 type Service struct {
 	gorm.Model
-	UserID      uint
+	UserID      uint `gorm:"not null"`
 	ServiceName ServiceType
 }
 

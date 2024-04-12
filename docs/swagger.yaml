@@ -87,12 +87,17 @@ definitions:
 info:
   contact: {}
 paths:
-  /user/kyc:
+  /user/kyc/{id}:
     post:
       consumes:
       - application/json
       description: Create KYC (Know Your Customer) record.
       parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: KYC details
         in: body
         name: body

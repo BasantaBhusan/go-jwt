@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/user/kyc": {
+        "/user/kyc/{id}": {
             "post": {
                 "description": "Create KYC (Know Your Customer) record.",
                 "consumes": [
@@ -29,6 +29,13 @@ const docTemplate = `{
                 ],
                 "summary": "Create KYC",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "KYC details",
                         "name": "body",

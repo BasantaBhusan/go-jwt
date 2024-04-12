@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/BasantaBhusan/go-jwt/initializers"
 	"github.com/BasantaBhusan/go-jwt/models"
@@ -40,11 +41,13 @@ type CreateKYCServiceRequest struct {
 // @Tags KYC
 // @Accept json
 // @Produce json
+// @Param id path int true "User ID"
 // @Param body body CreateKYCRequest true "KYC details"
 // @Success 200 {object} gin.H "KYC created successfully"
 // @Failure 400 {object} gin.H "Failed to read body or create KYC"
-// @Router /user/kyc [post]
+// @Router /user/kyc/{id} [post]
 func Createkyc(c *gin.Context) {
+
 	var body CreateKYCRequest
 
 	if err := c.BindJSON(&body); err != nil {
@@ -52,10 +55,19 @@ func Createkyc(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(body.IsKyc)
-	fmt.Println(body)
+	// Extract user ID from path parameter
+	userID := c.Param("id")
+
+	fmt.Println("user ko id k ho van", userID)
+
+	// Parse user ID to uint
+	userIDUint, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
 	if !body.IsKyc {
-		// If isKyc flag is false, do not create KYC
 		c.JSON(http.StatusOK, gin.H{"message": "KYC creation skipped"})
 		return
 	}
@@ -71,17 +83,17 @@ func Createkyc(c *gin.Context) {
 		AreaName: body.WorkingArea.AreaName,
 	}
 
-	// Convert []string to []models.Activities
 	var activities []models.Activity
 	for _, activityName := range body.WorkingArea.Activities {
 		activities = append(activities, models.Activity{ActivityName: activityName})
 	}
 
 	service := models.Service{
-		ServiceName: models.ServiceType(body.Service.ServiceName), // Convert string to models.ServiceType
+		ServiceName: models.ServiceType(body.Service.ServiceName),
 	}
 
 	kyc := models.Kyc{
+		UserID:         uint(userIDUint),
 		FullName:       body.FullName,
 		MobileNumber:   body.MobileNumber,
 		FirmRegistered: body.FirmRegistered,
@@ -89,10 +101,7 @@ func Createkyc(c *gin.Context) {
 		WorkingArea:    workingArea,
 	}
 
-	// Assign activities to WorkingArea
 	kyc.WorkingArea.Activities = activities
-
-	// Assign service to KYC
 	kyc.Service = service
 
 	result := initializers.DB.Create(&kyc)
