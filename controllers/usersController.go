@@ -116,6 +116,14 @@ func Login(c *gin.Context) {
 	})
 }
 
+// @Summary Validate user
+// @Description Validate User.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 "Ok"
+// @Failure 401 "Unauthorized"
+// @Router /user/validate [get]
 func Validate(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
@@ -130,6 +138,13 @@ func Validate(c *gin.Context) {
 	})
 }
 
+// @Summary Logout user
+// @Description Clear Cookie.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 "Sucessfully logged out."
+// @Router /logout [get]
 func Logout(c *gin.Context) {
 	c.SetCookie("Authorization", "", -1, "", "", false, true)
 	c.Redirect(http.StatusTemporaryRedirect, "/")

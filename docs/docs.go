@@ -15,7 +15,64 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/logout": {
+            "get": {
+                "description": "Clear Cookie.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Sucessfully logged out."
+                    }
+                }
+            }
+        },
         "/user/kyc/{id}": {
+            "get": {
+                "description": "Retrieve KYC (Know Your Customer) record by User ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KYC"
+                ],
+                "summary": "Get KYC by User ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KYC information",
+                        "schema": {
+                            "$ref": "#/definitions/models.Kyc"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID"
+                    },
+                    "404": {
+                        "description": "KYC not found for the given user ID"
+                    }
+                }
+            },
             "post": {
                 "description": "Create KYC (Know Your Customer) record.",
                 "consumes": [
@@ -48,16 +105,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "KYC created successfully",
-                        "schema": {
-                            "$ref": "#/definitions/gin.H"
-                        }
+                        "description": "KYC created successfully"
                     },
                     "400": {
-                        "description": "Failed to read body or create KYC",
-                        "schema": {
-                            "$ref": "#/definitions/gin.H"
-                        }
+                        "description": "Failed to read body or create KYC"
                     }
                 }
             }
@@ -126,6 +177,29 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/controllers.SuccessResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/user/validate": {
+            "get": {
+                "description": "Validate User.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Validate user",
+                "responses": {
+                    "200": {
+                        "description": "Ok"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -254,9 +328,217 @@ const docTemplate = `{
                 }
             }
         },
-        "gin.H": {
+        "gorm.DeletedAt": {
             "type": "object",
-            "additionalProperties": {}
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Activity": {
+            "type": "object",
+            "properties": {
+                "activityName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kycID": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "workingAreaID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Address": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kycID": {
+                    "type": "integer"
+                },
+                "municipality": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                },
+                "wardNumber": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InvestmentOption": {
+            "type": "string",
+            "enum": [
+                "up to 5 Lakhs",
+                "up to 10 Lakhs",
+                "up to 25 Lakhs",
+                "up to 50 Lakhs",
+                "up to 1 Crore",
+                "above 1 Crore"
+            ],
+            "x-enum-varnames": [
+                "UpTo5LAKHS",
+                "UpTo10LAKHS",
+                "UpTo25LAKHS",
+                "UpTo50LAKHS",
+                "UpTo1CRORE",
+                "Above1CRORE"
+            ]
+        },
+        "models.Kyc": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/models.Address"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "firmRegistered": {
+                    "type": "boolean"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mobileNumber": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/models.Service"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                },
+                "workingArea": {
+                    "$ref": "#/definitions/models.WorkingArea"
+                }
+            }
+        },
+        "models.Service": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "investment": {
+                    "$ref": "#/definitions/models.InvestmentOption"
+                },
+                "kycID": {
+                    "type": "integer"
+                },
+                "serviceName": {
+                    "$ref": "#/definitions/models.ServiceType"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ServiceType": {
+            "type": "string",
+            "enum": [
+                "Expert Advice",
+                "Business Partnership",
+                "Bank Loan Facilitation",
+                "Training and Coaching",
+                "Cold Store Construction",
+                "Assistance in Marketing",
+                "Investment"
+            ],
+            "x-enum-varnames": [
+                "ExpertAdvice",
+                "BusinessPartnership",
+                "BankLoanFacilitation",
+                "TrainingAndCoaching",
+                "ColdStoreConstruction",
+                "AssistanceInMarketing",
+                "InvestmentService"
+            ]
+        },
+        "models.WorkingArea": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Activity"
+                    }
+                },
+                "areaName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kycID": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
         }
     }
 }`

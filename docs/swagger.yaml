@@ -81,13 +81,195 @@ definitions:
     - email
     - password
     type: object
-  gin.H:
-    additionalProperties: {}
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.Activity:
+    properties:
+      activityName:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      kycID:
+        type: integer
+      updatedAt:
+        type: string
+      workingAreaID:
+        type: integer
+    type: object
+  models.Address:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      district:
+        type: string
+      id:
+        type: integer
+      kycID:
+        type: integer
+      municipality:
+        type: string
+      province:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: integer
+      wardNumber:
+        type: string
+    type: object
+  models.InvestmentOption:
+    enum:
+    - up to 5 Lakhs
+    - up to 10 Lakhs
+    - up to 25 Lakhs
+    - up to 50 Lakhs
+    - up to 1 Crore
+    - above 1 Crore
+    type: string
+    x-enum-varnames:
+    - UpTo5LAKHS
+    - UpTo10LAKHS
+    - UpTo25LAKHS
+    - UpTo50LAKHS
+    - UpTo1CRORE
+    - Above1CRORE
+  models.Kyc:
+    properties:
+      address:
+        $ref: '#/definitions/models.Address'
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      firmRegistered:
+        type: boolean
+      fullName:
+        type: string
+      id:
+        type: integer
+      mobileNumber:
+        type: string
+      service:
+        $ref: '#/definitions/models.Service'
+      updatedAt:
+        type: string
+      userID:
+        type: integer
+      workingArea:
+        $ref: '#/definitions/models.WorkingArea'
+    type: object
+  models.Service:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      investment:
+        $ref: '#/definitions/models.InvestmentOption'
+      kycID:
+        type: integer
+      serviceName:
+        $ref: '#/definitions/models.ServiceType'
+      updatedAt:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.ServiceType:
+    enum:
+    - Expert Advice
+    - Business Partnership
+    - Bank Loan Facilitation
+    - Training and Coaching
+    - Cold Store Construction
+    - Assistance in Marketing
+    - Investment
+    type: string
+    x-enum-varnames:
+    - ExpertAdvice
+    - BusinessPartnership
+    - BankLoanFacilitation
+    - TrainingAndCoaching
+    - ColdStoreConstruction
+    - AssistanceInMarketing
+    - InvestmentService
+  models.WorkingArea:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/models.Activity'
+        type: array
+      areaName:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      kycID:
+        type: integer
+      updatedAt:
+        type: string
+      userID:
+        type: integer
     type: object
 info:
   contact: {}
 paths:
+  /logout:
+    get:
+      consumes:
+      - application/json
+      description: Clear Cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sucessfully logged out.
+      summary: Logout user
+      tags:
+      - Users
   /user/kyc/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve KYC (Know Your Customer) record by User ID.
+      parameters:
+      - description: User ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KYC information
+          schema:
+            $ref: '#/definitions/models.Kyc'
+        "400":
+          description: Invalid user ID
+        "404":
+          description: KYC not found for the given user ID
+      summary: Get KYC by User ID
+      tags:
+      - KYC
     post:
       consumes:
       - application/json
@@ -109,12 +291,8 @@ paths:
       responses:
         "200":
           description: KYC created successfully
-          schema:
-            $ref: '#/definitions/gin.H'
         "400":
           description: Failed to read body or create KYC
-          schema:
-            $ref: '#/definitions/gin.H'
       summary: Create KYC
       tags:
       - KYC
@@ -160,6 +338,21 @@ paths:
           schema:
             $ref: '#/definitions/controllers.SuccessResponse'
       summary: Create new user
+      tags:
+      - Users
+  /user/validate:
+    get:
+      consumes:
+      - application/json
+      description: Validate User.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+        "401":
+          description: Unauthorized
+      summary: Validate user
       tags:
       - Users
 swagger: "2.0"

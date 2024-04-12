@@ -43,8 +43,8 @@ type CreateKYCServiceRequest struct {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body CreateKYCRequest true "KYC details"
-// @Success 200 {object} gin.H "KYC created successfully"
-// @Failure 400 {object} gin.H "Failed to read body or create KYC"
+// @Success 200 "KYC created successfully"
+// @Failure 400 "Failed to read body or create KYC"
 // @Router /user/kyc/{id} [post]
 func Createkyc(c *gin.Context) {
 
@@ -116,4 +116,38 @@ func Createkyc(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"kyc": kyc})
+}
+
+// @Summary Get KYC by User ID
+// @Description Retrieve KYC (Know Your Customer) record by User ID.
+// @Tags KYC
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID" Format(int64)
+// @Success 200 {object} models.Kyc "KYC information"
+// @Failure 400 "Invalid user ID"
+// @Failure 404 "KYC not found for the given user ID"
+// @Router /user/kyc/{id} [get]
+func GetKycByUserID(c *gin.Context) {
+	userID := c.Param("id")
+
+	userIDUint, err := strconv.ParseUint(userID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var kyc models.Kyc
+	// result := initializers.DB.Where("user_id = ?", userIDUint).First(&kyc)
+	result := initializers.DB.
+		Joins("JOIN addresses ON kycs.user_id = addresses.user_id").
+		Joins("JOIN working_areas ON kycs.user_id = working_areas.user_id").
+		Where("kycs.user_id = ?", userIDUint).
+		First(&kyc)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "KYC not found for the given user ID"})
+		return
+	}
+
+	c.JSON(http.StatusOK, kyc)
 }
