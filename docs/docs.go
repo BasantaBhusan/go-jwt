@@ -35,6 +35,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/all": {
+            "get": {
+                "description": "Retrieve all users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controllers.UserResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/kyc/create": {
+            "post": {
+                "description": "Create KYC (Know Your Customer) record.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KYC"
+                ],
+                "summary": "Create KYC",
+                "parameters": [
+                    {
+                        "description": "KYC details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.CreateKYCRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KYC created successfully"
+                    },
+                    "400": {
+                        "description": "Failed to read body or create KYC"
+                    }
+                }
+            }
+        },
         "/user/kyc/{id}": {
             "get": {
                 "description": "Retrieve KYC (Know Your Customer) record by User ID.",
@@ -70,45 +130,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "KYC not found for the given user ID"
-                    }
-                }
-            },
-            "post": {
-                "description": "Create KYC (Know Your Customer) record.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "KYC"
-                ],
-                "summary": "Create KYC",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "KYC details",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.CreateKYCRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "KYC created successfully"
-                    },
-                    "400": {
-                        "description": "Failed to read body or create KYC"
                     }
                 }
             }
@@ -325,6 +346,17 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 }
             }
         },

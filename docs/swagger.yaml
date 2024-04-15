@@ -81,6 +81,13 @@ definitions:
     - email
     - password
     type: object
+  controllers.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -244,6 +251,23 @@ paths:
       summary: Logout user
       tags:
       - Users
+  /user/all:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/controllers.UserResponse'
+            type: array
+      summary: Get all users
+      tags:
+      - Users
   /user/kyc/{id}:
     get:
       consumes:
@@ -270,16 +294,12 @@ paths:
       summary: Get KYC by User ID
       tags:
       - KYC
+  /user/kyc/create:
     post:
       consumes:
       - application/json
       description: Create KYC (Know Your Customer) record.
       parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: KYC details
         in: body
         name: body

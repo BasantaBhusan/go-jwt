@@ -16,7 +16,8 @@ func InitializeRoutes(r *gin.Engine) {
 		userRoutes.POST("/login", controllers.Login)
 		userRoutes.GET("/validate", middleware.RequireAuth, controllers.Validate)
 		userRoutes.GET("/logout", controllers.Logout)
-		userRoutes.POST("/kyc/:id", middleware.RequireAuth, controllers.Createkyc)
+		userRoutes.GET("/all", controllers.GetUsers)
+		userRoutes.POST("/kyc/create", middleware.RequireAuth, controllers.Createkyc)
 		userRoutes.GET("/kyc/:id", middleware.RequireAuth, controllers.GetKycByUserID)
 	}
 }

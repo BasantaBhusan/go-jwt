@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/BasantaBhusan/go-jwt/initializers"
 	"github.com/BasantaBhusan/go-jwt/models"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type CreateKYCRequest struct {
@@ -41,11 +41,10 @@ type CreateKYCServiceRequest struct {
 // @Tags KYC
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
 // @Param body body CreateKYCRequest true "KYC details"
 // @Success 200 "KYC created successfully"
 // @Failure 400 "Failed to read body or create KYC"
-// @Router /user/kyc/{id} [post]
+// @Router /user/kyc/create [post]
 func Createkyc(c *gin.Context) {
 
 	var body CreateKYCRequest
@@ -55,17 +54,14 @@ func Createkyc(c *gin.Context) {
 		return
 	}
 
-	// Extract user ID from path parameter
-	userID := c.Param("id")
+	user, exists := c.Get("user")
 
-	fmt.Println("user ko id k ho van", userID)
-
-	// Parse user ID to uint
-	userIDUint, err := strconv.ParseUint(userID, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
+
+	userID := user.(models.User).ID
 
 	if !body.IsKyc {
 		c.JSON(http.StatusOK, gin.H{"message": "KYC creation skipped"})
@@ -73,7 +69,7 @@ func Createkyc(c *gin.Context) {
 	}
 
 	address := models.Address{
-		UserID:       uint(userIDUint),
+		UserID:       userID,
 		Province:     body.Address.Province,
 		District:     body.Address.District,
 		Municipality: body.Address.Municipality,
@@ -81,7 +77,7 @@ func Createkyc(c *gin.Context) {
 	}
 
 	workingArea := models.WorkingArea{
-		UserID:   uint(userIDUint),
+		UserID:   userID,
 		AreaName: body.WorkingArea.AreaName,
 	}
 
@@ -92,13 +88,13 @@ func Createkyc(c *gin.Context) {
 
 	service := models.Service{
 
-		UserID: uint(userIDUint),
+		UserID: userID,
 
 		ServiceName: models.ServiceType(body.Service.ServiceName),
 	}
 
 	kyc := models.Kyc{
-		UserID:         uint(userIDUint),
+		UserID:         userID,
 		FullName:       body.FullName,
 		MobileNumber:   body.MobileNumber,
 		FirmRegistered: body.FirmRegistered,
@@ -114,6 +110,10 @@ func Createkyc(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create KYC"})
 		return
 	}
+
+	// updateUser := models.User{ID: userID}
+	initializers.DB.Model(&models.User{}).Where("id = ?", userID).Update("is_kyc", true)
+	// initializers.DB.Model(&updateUser).Update("is_kyc", true)
 
 	c.JSON(http.StatusOK, gin.H{"kyc": kyc})
 }
@@ -138,11 +138,13 @@ func GetKycByUserID(c *gin.Context) {
 	}
 
 	var kyc models.Kyc
-	// result := initializers.DB.Where("user_id = ?", userIDUint).First(&kyc)
-	result := initializers.DB.
-		Joins("JOIN addresses ON kycs.user_id = addresses.user_id").
-		Joins("JOIN working_areas ON kycs.user_id = working_areas.user_id").
-		Where("kycs.user_id = ?", userIDUint).
+
+	result := initializers.DB.Preload("Address").
+		Preload("WorkingArea", func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Activities")
+		}).
+		Preload("Service").
+		Where("user_id = ?", userIDUint).
 		First(&kyc)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "KYC not found for the given user ID"})

@@ -150,6 +150,21 @@ func Logout(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
+// @Summary Get all users
+// @Description Retrieve all users.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {array} UserResponse "List of users"
+// @Router /user/all [get]
+func GetUsers(c *gin.Context) {
+	var users []models.User
+	// initializers.DB.Find(&users)
+	// initializers.DB.Where("is_kyc = ?", true).Preload("Kyc").Find(&users)
+	initializers.DB.Where("is_kyc = ?", true).Preload("Kyc").Preload("Kyc.Address").Preload("Kyc.WorkingArea").Preload("Kyc.WorkingArea.Activities").Preload("Kyc.Service").Find(&users)
+	c.JSON(http.StatusOK, users)
+}
+
 type UserRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -158,6 +173,11 @@ type UserRequest struct {
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+type UserResponse struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
 }
 
 type SuccessResponse struct {
