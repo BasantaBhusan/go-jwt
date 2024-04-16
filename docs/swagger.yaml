@@ -270,24 +270,11 @@ definitions:
 info:
   contact: {}
 paths:
-  /logout:
-    get:
-      consumes:
-      - application/json
-      description: Clear Cookie.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Sucessfully logged out.
-      summary: Logout user
-      tags:
-      - Users
   /search:
     get:
       consumes:
       - application/json
-      description: Search users by email using Elasticsearch.
+      description: Search for users by email
       parameters:
       - description: Search query
         in: query
@@ -298,14 +285,31 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of users
+          description: List of users matching the search query
           schema:
             items:
               $ref: '#/definitions/models.User'
             type: array
-      summary: Search users
+      summary: Perform a search
       tags:
-      - Users
+      - Search
+  /search/all:
+    get:
+      consumes:
+      - application/json
+      description: Perform a global search across all models
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Perform a global search across all models
+      tags:
+      - Search
   /user/all:
     get:
       consumes:
@@ -391,6 +395,19 @@ paths:
           schema:
             $ref: '#/definitions/controllers.SuccessResponse'
       summary: User login
+      tags:
+      - Users
+  /user/logout:
+    get:
+      consumes:
+      - application/json
+      description: Clear Cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sucessfully logged out.
+      summary: Logout user
       tags:
       - Users
   /user/signup:

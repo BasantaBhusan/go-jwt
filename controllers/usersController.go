@@ -144,7 +144,7 @@ func Validate(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 "Sucessfully logged out."
-// @Router /logout [get]
+// @Router /user/logout [get]
 func Logout(c *gin.Context) {
 	c.SetCookie("Authorization", "", -1, "", "", false, true)
 	c.Redirect(http.StatusTemporaryRedirect, "/")
@@ -159,9 +159,22 @@ func Logout(c *gin.Context) {
 // @Router /user/all [get]
 func GetUsers(c *gin.Context) {
 	var users []models.User
-	// initializers.DB.Find(&users)
-	// initializers.DB.Where("is_kyc = ?", true).Preload("Kyc").Find(&users)
-	initializers.DB.Where("is_kyc = ?", true).Preload("Kyc").Preload("Kyc.Address").Preload("Kyc.WorkingArea").Preload("Kyc.WorkingArea.Activities").Preload("Kyc.Service").Find(&users)
+
+	// Check if Kyc model has data
+	var kycCount int64
+	initializers.DB.Model(&models.Kyc{}).Count(&kycCount)
+	if kycCount > 0 {
+		initializers.DB.Where("is_kyc = ?", true).
+			Preload("Kyc").
+			Preload("Kyc.Address").
+			Preload("Kyc.WorkingArea").
+			Preload("Kyc.WorkingArea.Activities").
+			Preload("Kyc.Service").
+			Find(&users)
+	} else {
+		initializers.DB.Find(&users)
+	}
+
 	c.JSON(http.StatusOK, users)
 }
 

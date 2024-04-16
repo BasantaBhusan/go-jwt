@@ -21,5 +21,6 @@ func InitializeRoutes(r *gin.Engine) {
 		userRoutes.GET("/kyc/:id", middleware.RequireAuth, controllers.GetKycByUserID)
 	}
 
-	// r.GET("/search", controllers.SearchUsersWithElasticsearchHandler)
+	r.GET("/search", controllers.Search)
+	r.GET("/search/all", controllers.GlobalSearch)
 }

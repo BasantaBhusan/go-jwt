@@ -15,29 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/logout": {
-            "get": {
-                "description": "Clear Cookie.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Logout user",
-                "responses": {
-                    "200": {
-                        "description": "Sucessfully logged out."
-                    }
-                }
-            }
-        },
         "/search": {
             "get": {
-                "description": "Search users by email using Elasticsearch.",
+                "description": "Search for users by email",
                 "consumes": [
                     "application/json"
                 ],
@@ -45,9 +25,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "Search"
                 ],
-                "summary": "Search users",
+                "summary": "Perform a search",
                 "parameters": [
                     {
                         "type": "string",
@@ -59,7 +39,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of users",
+                        "description": "List of users matching the search query",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -68,6 +48,31 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/search/all": {
+            "get": {
+                "description": "Perform a global search across all models",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Perform a global search across all models",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/user/all": {
@@ -199,6 +204,26 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/controllers.SuccessResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/user/logout": {
+            "get": {
+                "description": "Clear Cookie.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Sucessfully logged out."
                     }
                 }
             }

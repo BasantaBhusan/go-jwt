@@ -8,9 +8,9 @@ type Kyc struct {
 	FullName       string
 	MobileNumber   string
 	FirmRegistered bool
-	Address        Address
-	WorkingArea    WorkingArea
-	Service        Service
+	Address        Address     `gorm:"foreignKey:KycID"`
+	WorkingArea    WorkingArea `gorm:"foreignKey:KycID"`
+	Service        Service     `gorm:"foreignKey:KycID"`
 }
 
 type Address struct {
