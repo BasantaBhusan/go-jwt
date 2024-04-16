@@ -1,5 +1,3 @@
-// controllers/search.go
-
 package controllers
 
 import (
@@ -55,13 +53,17 @@ func GlobalSearch(c *gin.Context) {
 
 	var results []models.Kyc
 
-	// Perform case-insensitive search query across all models
 	if err := initializers.DB.
 		Joins("JOIN users ON kycs.user_id = users.id").
 		Joins("LEFT JOIN services ON kycs.id = services.kyc_id").
 		Joins("LEFT JOIN addresses ON kycs.id = addresses.kyc_id").
-		Where("LOWER(kycs.full_name) LIKE ? OR LOWER(users.email) LIKE ? OR LOWER(services.service_name) LIKE ? OR LOWER(addresses.province) LIKE ? OR LOWER(addresses.district) LIKE ? OR LOWER(addresses.municipality) LIKE ? OR LOWER(addresses.ward_number) LIKE ?",
-			"%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%").
+		Joins("LEFT JOIN Working_areas ON kycs.id = Working_areas.kyc_id").
+		Joins("LEFT JOIN activities ON working_areas.id = activities.working_area_id").
+		Where("LOWER(kycs.full_name) LIKE ? OR LOWER(users.email) LIKE ? OR LOWER(Working_areas.area_name) LIKE ? OR LOWER(activities.activity_name) LIKE ? OR LOWER(services.service_name) LIKE ? OR LOWER(addresses.province) LIKE ? OR LOWER(addresses.district) LIKE ? OR LOWER(addresses.municipality) LIKE ? OR LOWER(addresses.ward_number) LIKE ?",
+			"%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%", "%"+strings.ToLower(query)+"%").
+		Preload("Address").
+		Preload("WorkingArea").Preload("WorkingArea.Activities").
+		Preload("Service").
 		Find(&results).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to perform search"})
 		return
