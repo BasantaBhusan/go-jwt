@@ -25,6 +25,8 @@ type CreateKYCAddressRequest struct {
 	District     string `json:"district" binding:"required"`
 	Municipality string `json:"municipality"`
 	WardNumber   string `json:"ward_number" binding:"required"`
+	Latitude     string `json:"latitude" `
+	Longitude    string `json:"longitude"`
 }
 
 type CreateKYCWorkingAreaRequest struct {
@@ -74,6 +76,8 @@ func Createkyc(c *gin.Context) {
 		District:     body.Address.District,
 		Municipality: body.Address.Municipality,
 		WardNumber:   body.Address.WardNumber,
+		Longitude:    body.Address.Longitude,
+		Latitude:     body.Address.Latitude,
 	}
 
 	workingArea := models.WorkingArea{

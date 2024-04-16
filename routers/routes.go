@@ -20,4 +20,6 @@ func InitializeRoutes(r *gin.Engine) {
 		userRoutes.POST("/kyc/create", middleware.RequireAuth, controllers.Createkyc)
 		userRoutes.GET("/kyc/:id", middleware.RequireAuth, controllers.GetKycByUserID)
 	}
+
+	// r.GET("/search", controllers.SearchUsersWithElasticsearchHandler)
 }

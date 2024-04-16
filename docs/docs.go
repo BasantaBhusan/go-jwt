@@ -35,6 +35,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/search": {
+            "get": {
+                "description": "Search users by email using Elasticsearch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Search users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/all": {
             "get": {
                 "description": "Retrieve all users.",
@@ -238,6 +273,12 @@ const docTemplate = `{
                 "district": {
                     "type": "string"
                 },
+                "latitude": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
                 "municipality": {
                     "type": "string"
                 },
@@ -416,6 +457,12 @@ const docTemplate = `{
                 "kycID": {
                     "type": "integer"
                 },
+                "latitude": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
                 "municipality": {
                     "type": "string"
                 },
@@ -539,6 +586,42 @@ const docTemplate = `{
                 "AssistanceInMarketing",
                 "InvestmentService"
             ]
+        },
+        "models.User": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_kyc": {
+                    "type": "boolean"
+                },
+                "kyc": {
+                    "$ref": "#/definitions/models.Kyc"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
         },
         "models.WorkingArea": {
             "type": "object",

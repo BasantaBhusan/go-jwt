@@ -21,6 +21,8 @@ type Address struct {
 	District     string
 	Municipality string
 	WardNumber   string
+	Latitude     string
+	Longitude    string
 }
 
 type WorkingArea struct {
