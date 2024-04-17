@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -164,8 +165,17 @@ func Logout(c *gin.Context) {
 // @Success 200 {array} UserResponse "List of users"
 // @Router /user/all [get]
 func GetUsers(c *gin.Context) {
-	userRole, exists := c.Get("role")
-	if !exists || userRole != "ADMIN" {
+	user, exists := c.Get("user")
+
+	fmt.Println(user)
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	userRole := user.(models.User).Role
+
+	if userRole != "ADMIN" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Unauthorized",
 		})

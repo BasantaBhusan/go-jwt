@@ -899,6 +899,9 @@ const docTemplate = `{
                 "profile_picture": {
                     "type": "string"
                 },
+                "role": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 }
