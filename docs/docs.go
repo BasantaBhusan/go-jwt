@@ -50,6 +50,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/search/address": {
+            "post": {
+                "description": "Search based on the address model and return associated working area, activities, and services",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Perform a search based on the address model",
+                "parameters": [
+                    {
+                        "description": "Search request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.AddressSearchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search result",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.SearchResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/advanced": {
+            "get": {
+                "description": "Perform an advanced global search across all models based on the provided query string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Perform an advanced global search across all models",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of results matching the advanced search query",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Kyc"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/search/all": {
             "get": {
                 "description": "Perform a global search across all models",
@@ -287,6 +356,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.AddressSearchRequest": {
+            "type": "object",
+            "required": [
+                "address"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.CreateKYCAddressRequest": {
             "type": "object",
             "required": [
@@ -389,6 +469,29 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.SearchResult": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Activity"
+                    }
+                },
+                "address": {
+                    "$ref": "#/definitions/models.Address"
+                },
+                "associated_services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Service"
+                    }
+                },
+                "working_area": {
+                    "$ref": "#/definitions/models.WorkingArea"
                 }
             }
         },

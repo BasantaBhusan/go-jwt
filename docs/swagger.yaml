@@ -1,4 +1,11 @@
 definitions:
+  controllers.AddressSearchRequest:
+    properties:
+      address:
+        type: string
+    required:
+    - address
+    type: object
   controllers.CreateKYCAddressRequest:
     properties:
       district:
@@ -69,6 +76,21 @@ definitions:
     required:
     - email
     - password
+    type: object
+  controllers.SearchResult:
+    properties:
+      activities:
+        items:
+          $ref: '#/definitions/models.Activity'
+        type: array
+      address:
+        $ref: '#/definitions/models.Address'
+      associated_services:
+        items:
+          $ref: '#/definitions/models.Service'
+        type: array
+      working_area:
+        $ref: '#/definitions/models.WorkingArea'
     type: object
   controllers.SuccessResponse:
     properties:
@@ -291,6 +313,53 @@ paths:
               $ref: '#/definitions/models.User'
             type: array
       summary: Perform a search
+      tags:
+      - Search
+  /search/address:
+    post:
+      consumes:
+      - application/json
+      description: Search based on the address model and return associated working
+        area, activities, and services
+      parameters:
+      - description: Search request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.AddressSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search result
+          schema:
+            $ref: '#/definitions/controllers.SearchResult'
+      summary: Perform a search based on the address model
+      tags:
+      - Search
+  /search/advanced:
+    get:
+      consumes:
+      - application/json
+      description: Perform an advanced global search across all models based on the
+        provided query string
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of results matching the advanced search query
+          schema:
+            items:
+              $ref: '#/definitions/models.Kyc'
+            type: array
+      summary: Perform an advanced global search across all models
       tags:
       - Search
   /search/all:
