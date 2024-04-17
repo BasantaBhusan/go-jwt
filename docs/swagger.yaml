@@ -90,6 +90,50 @@ definitions:
       message:
         type: string
     type: object
+  controllers.UpdateKYCAddressRequest:
+    properties:
+      district:
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+      municipality:
+        type: string
+      province:
+        type: string
+      ward_number:
+        type: string
+    type: object
+  controllers.UpdateKYCRequest:
+    properties:
+      address:
+        $ref: '#/definitions/controllers.UpdateKYCAddressRequest'
+      firm_registered:
+        type: boolean
+      full_name:
+        type: string
+      mobile_number:
+        type: string
+      service:
+        $ref: '#/definitions/controllers.UpdateKYCServiceRequest'
+      working_area:
+        $ref: '#/definitions/controllers.UpdateKYCWorkingAreaRequest'
+    type: object
+  controllers.UpdateKYCServiceRequest:
+    properties:
+      service_name:
+        type: string
+    type: object
+  controllers.UpdateKYCWorkingAreaRequest:
+    properties:
+      activities:
+        items:
+          type: string
+        type: array
+      area_name:
+        type: string
+    type: object
   controllers.UserRequest:
     properties:
       email:
@@ -471,6 +515,36 @@ paths:
         "400":
           description: Failed to read body or create KYC
       summary: Create KYC
+      tags:
+      - KYC
+  /user/kyc/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update KYC (Know Your Customer) record by User ID.
+      parameters:
+      - description: User ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: KYC details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateKYCRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KYC updated successfully
+        "400":
+          description: Invalid user ID or failed to read body
+        "404":
+          description: KYC not found for the given user ID
+      summary: Update KYC by User ID
       tags:
       - KYC
   /user/login:

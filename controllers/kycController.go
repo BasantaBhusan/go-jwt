@@ -133,12 +133,38 @@ func Createkyc(c *gin.Context) {
 // @Failure 404 "KYC not found for the given user ID"
 // @Router /user/kyc/{id} [get]
 func GetKycByUserID(c *gin.Context) {
+	userRole, exists := c.Get("role")
+	if !exists || (userRole != "ADMIN" && userRole != "USER") {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
 	userID := c.Param("id")
 
 	userIDUint, err := strconv.ParseUint(userID, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
+	}
+
+	// If the user is not an admin, check if the requested user ID matches their own
+	if userRole != "ADMIN" {
+		sub, exists := c.Get("sub")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+		userIDFromToken, ok := sub.(uint)
+		if !ok || userIDFromToken != uint(userIDUint) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
 	}
 
 	var kyc models.Kyc
@@ -156,4 +182,145 @@ func GetKycByUserID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, kyc)
+}
+
+// @Summary Update KYC by User ID
+// @Description Update KYC (Know Your Customer) record by User ID.
+// @Tags KYC
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID" Format(int64)
+// @Param body body UpdateKYCRequest true "KYC details"
+// @Success 200 "KYC updated successfully"
+// @Failure 400 "Invalid user ID or failed to read body"
+// @Failure 404 "KYC not found for the given user ID"
+// @Router /user/kyc/update/{id} [put]
+func UpdateKycByUserID(c *gin.Context) {
+	userRole, exists := c.Get("role")
+	if !exists || (userRole != "ADMIN" && userRole != "USER") {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	var userIDUint uint64
+	var userIDFromToken uint
+	if userRole == "USER" {
+		sub, exists := c.Get("sub")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+		userIDFromToken, ok := sub.(uint)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Unauthorized",
+			})
+			return
+		}
+		userIDUint = uint64(userIDFromToken)
+	} else { // Admin role
+		userID := c.Param("id")
+		var err error
+		userIDUint, err = strconv.ParseUint(userID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
+	}
+
+	var body UpdateKYCRequest
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
+		return
+	}
+
+	var kyc models.Kyc
+	result := initializers.DB.Where("user_id = ?", userIDUint).First(&kyc)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "KYC not found for the given user ID"})
+		return
+	}
+
+	// If the user is not an admin, check if the requested user ID matches their own
+	if userRole == "USER" && userIDFromToken != uint(userIDUint) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Update KYC fields
+	kyc.FullName = body.FullName
+	kyc.MobileNumber = body.MobileNumber
+	kyc.FirmRegistered = body.FirmRegistered
+	// Update address fields if provided
+	if body.Address.Province != "" {
+		kyc.Address.Province = body.Address.Province
+	}
+	if body.Address.District != "" {
+		kyc.Address.District = body.Address.District
+	}
+	if body.Address.Municipality != "" {
+		kyc.Address.Municipality = body.Address.Municipality
+	}
+	if body.Address.WardNumber != "" {
+		kyc.Address.WardNumber = body.Address.WardNumber
+	}
+	if body.Address.Latitude != "" {
+		kyc.Address.Latitude = body.Address.Latitude
+	}
+	if body.Address.Longitude != "" {
+		kyc.Address.Longitude = body.Address.Longitude
+	}
+	// Update working area fields if provided
+	if body.WorkingArea.AreaName != "" {
+		kyc.WorkingArea.AreaName = body.WorkingArea.AreaName
+	}
+	if len(body.WorkingArea.Activities) > 0 {
+		kyc.WorkingArea.Activities = make([]models.Activity, len(body.WorkingArea.Activities))
+		for i, activityName := range body.WorkingArea.Activities {
+			kyc.WorkingArea.Activities[i] = models.Activity{ActivityName: activityName}
+		}
+	}
+	// Update service fields if provided
+	if body.Service.ServiceName != "" {
+		kyc.Service.ServiceName = models.ServiceType(body.Service.ServiceName)
+	}
+
+	result = initializers.DB.Save(&kyc)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to update KYC"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "KYC updated successfully", "kyc": kyc})
+}
+
+type UpdateKYCRequest struct {
+	FullName       string                      `json:"full_name"`
+	MobileNumber   string                      `json:"mobile_number"`
+	FirmRegistered bool                        `json:"firm_registered"`
+	Address        UpdateKYCAddressRequest     `json:"address"`
+	WorkingArea    UpdateKYCWorkingAreaRequest `json:"working_area"`
+	Service        UpdateKYCServiceRequest     `json:"service"`
+}
+
+type UpdateKYCAddressRequest struct {
+	Province     string `json:"province"`
+	District     string `json:"district"`
+	Municipality string `json:"municipality"`
+	WardNumber   string `json:"ward_number"`
+	Latitude     string `json:"latitude"`
+	Longitude    string `json:"longitude"`
+}
+
+type UpdateKYCWorkingAreaRequest struct {
+	AreaName   string   `json:"area_name"`
+	Activities []string `json:"activities"`
+}
+
+type UpdateKYCServiceRequest struct {
+	ServiceName string `json:"service_name"`
 }

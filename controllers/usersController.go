@@ -44,6 +44,12 @@ func Signup(c *gin.Context) {
 
 	user := models.User{Email: body.Email, Password: string(hash)}
 
+	if body.Email == "info@agrinepal.com" && body.Password == "agrinepal@info" {
+		user.Role = "ADMIN"
+	} else {
+		user.Role = "USER"
+	}
+
 	result := initializers.DB.Create(&user)
 
 	if result.Error != nil {
@@ -158,6 +164,14 @@ func Logout(c *gin.Context) {
 // @Success 200 {array} UserResponse "List of users"
 // @Router /user/all [get]
 func GetUsers(c *gin.Context) {
+	userRole, exists := c.Get("role")
+	if !exists || userRole != "ADMIN" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
 	var users []models.User
 
 	// Check if Kyc model has data

@@ -18,6 +18,7 @@ func InitializeRoutes(r *gin.Engine) {
 		userRoutes.GET("/logout", controllers.Logout)
 		userRoutes.GET("/all", controllers.GetUsers)
 		userRoutes.POST("/kyc/create", middleware.RequireAuth, controllers.Createkyc)
+		userRoutes.POST("/kyc/update/:id", middleware.RequireAuth, controllers.UpdateKycByUserID)
 		userRoutes.GET("/kyc/:id", middleware.RequireAuth, controllers.GetKycByUserID)
 	}
 
@@ -25,7 +26,6 @@ func InitializeRoutes(r *gin.Engine) {
 	r.GET("/search/all", controllers.GlobalSearch)
 	r.GET("/search/advanced", controllers.AdvancedSearch)
 	r.GET("/search/address", controllers.AddressSearch)
-	// r.GET("/search/all/address/{province}/{district}/{municipality}/{ward_number}", controllers.AllAddressSearch)
 	r.GET("/search/all/address/:province/:district/:municipality/:ward_number", controllers.AllAddressSearch)
 
 }

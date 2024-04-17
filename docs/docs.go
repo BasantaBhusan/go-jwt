@@ -255,6 +255,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/kyc/update/{id}": {
+            "put": {
+                "description": "Update KYC (Know Your Customer) record by User ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KYC"
+                ],
+                "summary": "Update KYC by User ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "KYC details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.UpdateKYCRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KYC updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid user ID or failed to read body"
+                    },
+                    "404": {
+                        "description": "KYC not found for the given user ID"
+                    }
+                }
+            }
+        },
         "/user/kyc/{id}": {
             "get": {
                 "description": "Retrieve KYC (Know Your Customer) record by User ID.",
@@ -539,6 +584,74 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateKYCAddressRequest": {
+            "type": "object",
+            "properties": {
+                "district": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
+                "municipality": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "ward_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateKYCRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/controllers.UpdateKYCAddressRequest"
+                },
+                "firm_registered": {
+                    "type": "boolean"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "mobile_number": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/controllers.UpdateKYCServiceRequest"
+                },
+                "working_area": {
+                    "$ref": "#/definitions/controllers.UpdateKYCWorkingAreaRequest"
+                }
+            }
+        },
+        "controllers.UpdateKYCServiceRequest": {
+            "type": "object",
+            "properties": {
+                "service_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateKYCWorkingAreaRequest": {
+            "type": "object",
+            "properties": {
+                "activities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "area_name": {
                     "type": "string"
                 }
             }
