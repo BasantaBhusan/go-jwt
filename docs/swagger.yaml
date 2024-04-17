@@ -1,11 +1,4 @@
 definitions:
-  controllers.AddressSearchRequest:
-    properties:
-      address:
-        type: string
-    required:
-    - address
-    type: object
   controllers.CreateKYCAddressRequest:
     properties:
       district:
@@ -316,18 +309,17 @@ paths:
       tags:
       - Search
   /search/address:
-    post:
+    get:
       consumes:
       - application/json
       description: Search based on the address model and return associated working
         area, activities, and services
       parameters:
-      - description: Search request
-        in: body
-        name: body
+      - description: Search query
+        in: query
+        name: query
         required: true
-        schema:
-          $ref: '#/definitions/controllers.AddressSearchRequest'
+        type: string
       produces:
       - application/json
       responses:
@@ -377,6 +369,43 @@ paths:
       - application/json
       responses: {}
       summary: Perform a global search across all models
+      tags:
+      - Search
+  /search/all/address/{province}/{district}/{municipality}/{ward_number}:
+    get:
+      consumes:
+      - application/json
+      description: Search based on the address model and return associated working
+        area, activities, and services
+      parameters:
+      - description: Province
+        in: path
+        name: province
+        required: true
+        type: string
+      - description: District
+        in: path
+        name: district
+        required: true
+        type: string
+      - description: Municipality
+        in: path
+        name: municipality
+        required: true
+        type: string
+      - description: Ward Number
+        in: path
+        name: ward_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search result
+          schema:
+            $ref: '#/definitions/controllers.SearchResult'
+      summary: Perform a search based on the address model
       tags:
       - Search
   /user/all:

@@ -25,4 +25,7 @@ func InitializeRoutes(r *gin.Engine) {
 	r.GET("/search/all", controllers.GlobalSearch)
 	r.GET("/search/advanced", controllers.AdvancedSearch)
 	r.GET("/search/address", controllers.AddressSearch)
+	// r.GET("/search/all/address/{province}/{district}/{municipality}/{ward_number}", controllers.AllAddressSearch)
+	r.GET("/search/all/address/:province/:district/:municipality/:ward_number", controllers.AllAddressSearch)
+
 }

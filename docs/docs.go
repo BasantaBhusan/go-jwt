@@ -51,7 +51,7 @@ const docTemplate = `{
             }
         },
         "/search/address": {
-            "post": {
+            "get": {
                 "description": "Search based on the address model and return associated working area, activities, and services",
                 "consumes": [
                     "application/json"
@@ -65,13 +65,11 @@ const docTemplate = `{
                 "summary": "Perform a search based on the address model",
                 "parameters": [
                     {
-                        "description": "Search request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.AddressSearchRequest"
-                        }
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -142,6 +140,59 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {}
+            }
+        },
+        "/search/all/address/{province}/{district}/{municipality}/{ward_number}": {
+            "get": {
+                "description": "Search based on the address model and return associated working area, activities, and services",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Perform a search based on the address model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Province",
+                        "name": "province",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "District",
+                        "name": "district",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Municipality",
+                        "name": "municipality",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ward Number",
+                        "name": "ward_number",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search result",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.SearchResult"
+                        }
+                    }
+                }
             }
         },
         "/user/all": {
@@ -356,17 +407,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.AddressSearchRequest": {
-            "type": "object",
-            "required": [
-                "address"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                }
-            }
-        },
         "controllers.CreateKYCAddressRequest": {
             "type": "object",
             "required": [

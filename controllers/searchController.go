@@ -138,22 +138,121 @@ func buildAdvancedQuery(terms []string) *gorm.DB {
 // @Tags Search
 // @Accept json
 // @Produce json
-// @Param body body AddressSearchRequest true "Search request"
+// @Param query query string true "Search query"
 // @Success 200 {object} SearchResult "Search result"
-// @Router /search/address [post]
+// @Router /search/address [get]
 func AddressSearch(c *gin.Context) {
-	var reqBody AddressSearchRequest
-	if err := c.ShouldBindJSON(&reqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+	query := c.Query("query")
+
+	// If the query is empty, return an error
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Empty search query"})
 		return
 	}
 
-	addressQuery := reqBody.Address
+	// Define conditions for the query based on provided query parameter
+	conditions := "province ILIKE ? OR district ILIKE ? OR municipality ILIKE ? OR ward_number ILIKE ?"
+	searchQuery := "%" + strings.ToLower(query) + "%"
+
+	// Search for the addresses
+	var addresses []models.Address
+	if err := initializers.DB.Where(conditions, searchQuery, searchQuery, searchQuery, searchQuery).Find(&addresses).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Addresses not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search addresses"})
+		}
+		return
+	}
+
+	// Initialize a slice to hold the results
+	var results []SearchResult
+
+	// Iterate over each address to retrieve associated data
+	for _, address := range addresses {
+		// Find the working area based on the address information
+		var workingArea models.WorkingArea
+		if err := initializers.DB.
+			Joins("JOIN kycs ON working_areas.kyc_id = kycs.id").
+			Joins("JOIN addresses ON kycs.id = addresses.kyc_id").
+			Where("addresses.user_id = ? AND addresses.kyc_id = ?", address.UserID, address.KycID).
+			Find(&workingArea).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Working area not found for the provided address"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve working area"})
+			}
+			return
+		}
+
+		// Retrieve activities associated with the working area
+		var activities []models.Activity
+		if err := initializers.DB.Where("working_area_id = ?", workingArea.ID).Find(&activities).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve activities"})
+			return
+		}
+
+		// Retrieve services associated with the activities
+		var services []models.Service
+		if err := initializers.DB.
+			Joins("JOIN activities ON activities.working_area_id = ?", workingArea.ID).
+			Joins("JOIN working_areas ON activities.working_area_id = working_areas.id").
+			Where("services.kyc_id = working_areas.kyc_id").
+			Find(&services).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve services"})
+			return
+		}
+
+		// Append the results to the slice
+		result := SearchResult{
+			Address:            address,
+			WorkingArea:        workingArea,
+			Activities:         activities,
+			AssociatedServices: services,
+		}
+		results = append(results, result)
+	}
+
+	// Construct the response
+	c.JSON(http.StatusOK, results)
+}
+
+// SearchResult represents the search result containing address, working area, activities, and associated services
+type SearchResult struct {
+	Address            models.Address     `json:"address"`
+	WorkingArea        models.WorkingArea `json:"working_area"`
+	Activities         []models.Activity  `json:"activities"`
+	AssociatedServices []models.Service   `json:"associated_services"`
+}
+
+// AddressSearchRequest represents the request body for AddressSearch
+type AddressSearchRequest struct {
+	Address string `json:"address" binding:"required"`
+}
+
+// AllAddressSearch handles search requests based on the address model
+// and returns associated working area, activities, and services
+// @Summary Perform a search based on the address model
+// @Description Search based on the address model and return associated working area, activities, and services
+// @Tags Search
+// @Accept json
+// @Produce json
+// @Param province path string true "Province"
+// @Param district path string true "District"
+// @Param municipality path string true "Municipality"
+// @Param ward_number path string true "Ward Number"
+// @Success 200 {object} SearchResult "Search result"
+// @Router /search/all/address/{province}/{district}/{municipality}/{ward_number} [get]
+func AllAddressSearch(c *gin.Context) {
+	province := c.Param("province")
+	district := c.Param("district")
+	municipality := c.Param("municipality")
+	wardNumber := c.Param("ward_number")
 
 	// Search for the address
 	var address models.Address
-	if err := initializers.DB.Where("LOWER(province) LIKE ? OR LOWER(district) LIKE ? OR LOWER(municipality) LIKE ? OR LOWER(ward_number) LIKE ?",
-		"%"+strings.ToLower(addressQuery)+"%", "%"+strings.ToLower(addressQuery)+"%", "%"+strings.ToLower(addressQuery)+"%", "%"+strings.ToLower(addressQuery)+"%").
+	if err := initializers.DB.Where("LOWER(province) = ? AND LOWER(district) = ? AND LOWER(municipality) = ? AND LOWER(ward_number) = ?",
+		strings.ToLower(province), strings.ToLower(district), strings.ToLower(municipality), strings.ToLower(wardNumber)).
 		First(&address).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
@@ -165,7 +264,11 @@ func AddressSearch(c *gin.Context) {
 
 	// Find the working area based on the address information
 	var workingArea models.WorkingArea
-	if err := initializers.DB.Where("area_name LIKE ?", "%"+strings.ToLower(addressQuery)+"%").First(&workingArea).Error; err != nil {
+	if err := initializers.DB.
+		Joins("JOIN kycs ON working_areas.kyc_id = kycs.id").
+		Joins("JOIN addresses ON kycs.id = addresses.kyc_id").
+		Where("addresses.user_id = ? AND addresses.kyc_id = ?", address.UserID, address.KycID).
+		Find(&workingArea).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Working area not found for the provided address"})
 		} else {
@@ -183,12 +286,14 @@ func AddressSearch(c *gin.Context) {
 
 	// Retrieve services associated with the activities
 	var services []models.Service
-	if err := initializers.DB.Joins("JOIN activities ON services.activity_id = activities.id").
-		Where("activities.id IN (?)", activities).Find(&services).Error; err != nil {
+	if err := initializers.DB.
+		Joins("JOIN activities ON activities.working_area_id = ?", workingArea.ID).
+		Joins("JOIN working_areas ON activities.working_area_id = working_areas.id").
+		Where("services.kyc_id = working_areas.kyc_id").
+		Find(&services).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve services"})
 		return
 	}
-
 	// Construct the response
 	result := SearchResult{
 		Address:            address,
@@ -198,17 +303,4 @@ func AddressSearch(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
-}
-
-// SearchResult represents the search result containing address, working area, activities, and associated services
-type SearchResult struct {
-	Address            models.Address     `json:"address"`
-	WorkingArea        models.WorkingArea `json:"working_area"`
-	Activities         []models.Activity  `json:"activities"`
-	AssociatedServices []models.Service   `json:"associated_services"`
-}
-
-// AddressSearchRequest represents the request body for AddressSearch
-type AddressSearchRequest struct {
-	Address string `json:"address" binding:"required"`
 }
