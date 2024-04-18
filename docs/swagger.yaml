@@ -1,4 +1,15 @@
 definitions:
+  controllers.CreateActivityItems:
+    properties:
+      activity_name:
+        type: string
+      items:
+        items:
+          type: string
+        type: array
+    required:
+    - activity_name
+    type: object
   controllers.CreateKYCAddressRequest:
     properties:
       district:
@@ -52,7 +63,7 @@ definitions:
     properties:
       activities:
         items:
-          type: string
+          $ref: '#/definitions/controllers.CreateActivityItems'
         type: array
       area_name:
         type: string
@@ -89,6 +100,15 @@ definitions:
     properties:
       message:
         type: string
+    type: object
+  controllers.UpdateActivityItems:
+    properties:
+      activity_name:
+        type: string
+      items:
+        items:
+          type: string
+        type: array
     type: object
   controllers.UpdateKYCAddressRequest:
     properties:
@@ -129,7 +149,7 @@ definitions:
     properties:
       activities:
         items:
-          type: string
+          $ref: '#/definitions/controllers.UpdateActivityItems'
         type: array
       area_name:
         type: string
@@ -169,12 +189,31 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: integer
+      items:
+        items:
+          $ref: '#/definitions/models.ActivityItem'
+        type: array
       kycID:
         type: integer
       updatedAt:
         type: string
       workingAreaID:
         type: integer
+    type: object
+  models.ActivityItem:
+    properties:
+      activityID:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      name:
+        type: string
+      updatedAt:
+        type: string
     type: object
   models.Address:
     properties:

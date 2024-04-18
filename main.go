@@ -19,7 +19,7 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/"
 	r := gin.Default()
 	routers.InitializeRoutes(r)
-	url := ginSwagger.URL("http://localhost:3002/swagger/doc.json")
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url, func(c *ginSwagger.Config) {
 		c.DefaultModelsExpandDepth = -1
 	}))

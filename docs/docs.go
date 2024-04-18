@@ -452,6 +452,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.CreateActivityItems": {
+            "type": "object",
+            "required": [
+                "activity_name"
+            ],
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "controllers.CreateKYCAddressRequest": {
             "type": "object",
             "required": [
@@ -534,7 +551,7 @@ const docTemplate = `{
                 "activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/controllers.CreateActivityItems"
                     }
                 },
                 "area_name": {
@@ -585,6 +602,20 @@ const docTemplate = `{
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateActivityItems": {
+            "type": "object",
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -648,7 +679,7 @@ const docTemplate = `{
                 "activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/controllers.UpdateActivityItems"
                     }
                 },
                 "area_name": {
@@ -709,6 +740,12 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ActivityItem"
+                    }
+                },
                 "kycID": {
                     "type": "integer"
                 },
@@ -717,6 +754,29 @@ const docTemplate = `{
                 },
                 "workingAreaID": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ActivityItem": {
+            "type": "object",
+            "properties": {
+                "activityID": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },

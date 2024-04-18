@@ -9,7 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateActivity creates a new activity for a working area.
+type CreateActivityRequest struct {
+	ActivityName string   `json:"activity_name" binding:"required"`
+	Items        []string `json:"items"`
+}
+
+type UpdateActivityRequest struct {
+	ActivityName string   `json:"activity_name"`
+	Items        []string `json:"items"`
+}
+
 func CreateActivity(c *gin.Context) {
 	userRole, exists := c.Get("role")
 	if !exists || userRole != "ADMIN" {
@@ -17,10 +26,19 @@ func CreateActivity(c *gin.Context) {
 		return
 	}
 
-	var activity models.Activity
-	if err := c.BindJSON(&activity); err != nil {
+	var req CreateActivityRequest
+	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
 		return
+	}
+
+	var activity models.Activity
+	activity.ActivityName = req.ActivityName
+
+	if len(req.Items) > 0 {
+		for _, item := range req.Items {
+			activity.Items = append(activity.Items, models.ActivityItem{Name: item})
+		}
 	}
 
 	result := initializers.DB.Create(&activity)
@@ -32,7 +50,6 @@ func CreateActivity(c *gin.Context) {
 	c.JSON(http.StatusOK, activity)
 }
 
-// GetActivity retrieves activity by ID.
 func GetActivity(c *gin.Context) {
 	userRole, exists := c.Get("role")
 	if !exists || userRole != "ADMIN" {
@@ -44,7 +61,7 @@ func GetActivity(c *gin.Context) {
 	activityID, _ := strconv.ParseUint(id, 10, 64)
 
 	var activity models.Activity
-	result := initializers.DB.First(&activity, activityID)
+	result := initializers.DB.Preload("Items").First(&activity, activityID)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Activity not found"})
 		return
@@ -53,7 +70,6 @@ func GetActivity(c *gin.Context) {
 	c.JSON(http.StatusOK, activity)
 }
 
-// UpdateActivity updates an existing activity.
 func UpdateActivity(c *gin.Context) {
 	userRole, exists := c.Get("role")
 	if !exists || userRole != "ADMIN" {
@@ -64,10 +80,21 @@ func UpdateActivity(c *gin.Context) {
 	id := c.Param("id")
 	activityID, _ := strconv.ParseUint(id, 10, 64)
 
-	var activity models.Activity
-	if err := c.BindJSON(&activity); err != nil {
+	var req UpdateActivityRequest
+	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
 		return
+	}
+
+	var activity models.Activity
+	activity.ActivityName = req.ActivityName
+
+	if len(req.Items) > 0 {
+		var items []models.ActivityItem
+		for _, item := range req.Items {
+			items = append(items, models.ActivityItem{Name: item})
+		}
+		activity.Items = items
 	}
 
 	result := initializers.DB.Model(&models.Activity{}).Where("id = ?", activityID).Updates(&activity)
@@ -77,24 +104,4 @@ func UpdateActivity(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Activity updated successfully"})
-}
-
-// DeleteActivity deletes an activity by ID.
-func DeleteActivity(c *gin.Context) {
-	userRole, exists := c.Get("role")
-	if !exists || userRole != "ADMIN" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	id := c.Param("id")
-	activityID, _ := strconv.ParseUint(id, 10, 64)
-
-	result := initializers.DB.Delete(&models.Activity{}, activityID)
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to delete activity"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Activity deleted successfully"})
 }

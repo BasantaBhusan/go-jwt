@@ -441,6 +441,23 @@
         }
     },
     "definitions": {
+        "controllers.CreateActivityItems": {
+            "type": "object",
+            "required": [
+                "activity_name"
+            ],
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "controllers.CreateKYCAddressRequest": {
             "type": "object",
             "required": [
@@ -523,7 +540,7 @@
                 "activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/controllers.CreateActivityItems"
                     }
                 },
                 "area_name": {
@@ -574,6 +591,20 @@
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.UpdateActivityItems": {
+            "type": "object",
+            "properties": {
+                "activity_name": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -637,7 +668,7 @@
                 "activities": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/controllers.UpdateActivityItems"
                     }
                 },
                 "area_name": {
@@ -698,6 +729,12 @@
                 "id": {
                     "type": "integer"
                 },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ActivityItem"
+                    }
+                },
                 "kycID": {
                     "type": "integer"
                 },
@@ -706,6 +743,29 @@
                 },
                 "workingAreaID": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ActivityItem": {
+            "type": "object",
+            "properties": {
+                "activityID": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },

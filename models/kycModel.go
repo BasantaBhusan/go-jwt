@@ -38,6 +38,13 @@ type Activity struct {
 	WorkingAreaID uint
 	KycID         uint
 	ActivityName  string
+	Items         []ActivityItem
+}
+
+type ActivityItem struct {
+	gorm.Model
+	ActivityID uint
+	Name       string
 }
 
 type ServiceType string

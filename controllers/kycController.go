@@ -30,8 +30,13 @@ type CreateKYCAddressRequest struct {
 }
 
 type CreateKYCWorkingAreaRequest struct {
-	AreaName   string   `json:"area_name" binding:"required"`
-	Activities []string `json:"activities" binding:"required"`
+	AreaName   string                `json:"area_name" binding:"required"`
+	Activities []CreateActivityItems `json:"activities" binding:"required"`
+}
+
+type CreateActivityItems struct {
+	ActivityName string   `json:"activity_name" binding:"required"`
+	Items        []string `json:"items"`
 }
 
 type CreateKYCServiceRequest struct {
@@ -48,7 +53,6 @@ type CreateKYCServiceRequest struct {
 // @Failure 400 "Failed to read body or create KYC"
 // @Router /user/kyc/create [post]
 func Createkyc(c *gin.Context) {
-
 	var body CreateKYCRequest
 
 	if err := c.BindJSON(&body); err != nil {
@@ -70,6 +74,7 @@ func Createkyc(c *gin.Context) {
 		return
 	}
 
+	// Create address
 	address := models.Address{
 		UserID:       userID,
 		Province:     body.Address.Province,
@@ -80,23 +85,34 @@ func Createkyc(c *gin.Context) {
 		Latitude:     body.Address.Latitude,
 	}
 
+	// Create working area
 	workingArea := models.WorkingArea{
 		UserID:   userID,
 		AreaName: body.WorkingArea.AreaName,
 	}
 
+	// Create activities
 	var activities []models.Activity
-	for _, activityName := range body.WorkingArea.Activities {
-		activities = append(activities, models.Activity{ActivityName: activityName})
+	for _, activityReq := range body.WorkingArea.Activities {
+		activity := models.Activity{ActivityName: activityReq.ActivityName}
+
+		// Create activity items
+		var items []models.ActivityItem
+		for _, item := range activityReq.Items {
+			items = append(items, models.ActivityItem{Name: item})
+		}
+		activity.Items = items
+
+		activities = append(activities, activity)
 	}
 
+	// Create service
 	service := models.Service{
-
-		UserID: userID,
-
+		UserID:      userID,
 		ServiceName: models.ServiceType(body.Service.ServiceName),
 	}
 
+	// Create KYC
 	kyc := models.Kyc{
 		UserID:         userID,
 		FullName:       body.FullName,
@@ -104,22 +120,24 @@ func Createkyc(c *gin.Context) {
 		FirmRegistered: body.FirmRegistered,
 		Address:        address,
 		WorkingArea:    workingArea,
+		Service:        service,
 	}
 
+	// Associate activities with working area
 	kyc.WorkingArea.Activities = activities
-	kyc.Service = service
 
+	// Create KYC record
 	result := initializers.DB.Create(&kyc)
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create KYC"})
 		return
 	}
 
-	// updateUser := models.User{ID: userID}
+	// Update user's KYC status
 	initializers.DB.Model(&models.User{}).Where("id = ?", userID).Update("is_kyc", true)
-	// initializers.DB.Model(&updateUser).Update("is_kyc", true)
 
-	c.JSON(http.StatusOK, gin.H{"kyc": kyc})
+	c.JSON(http.StatusOK, gin.H{"message": "Kyc Successfully Completed", "kyc": kyc})
+
 }
 
 // @Summary Get KYC by User ID
@@ -151,7 +169,7 @@ func GetKycByUserID(c *gin.Context) {
 
 	// If the user is not an admin, check if the requested user ID matches their own
 	if userRole != "ADMIN" {
-		sub, exists := c.Get("sub")
+		sub, exists := c.Get("userId")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Unauthorized",
@@ -181,7 +199,7 @@ func GetKycByUserID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, kyc)
+	c.JSON(http.StatusOK, gin.H{"message": "User Successfully fetched", "kyc": kyc})
 }
 
 // @Summary Update KYC by User ID
@@ -204,32 +222,24 @@ func UpdateKycByUserID(c *gin.Context) {
 		return
 	}
 
-	var userIDUint uint64
-	var userIDFromToken uint
+	var userIDUint uint
 	if userRole == "USER" {
-		sub, exists := c.Get("sub")
+		userIDFromTokenRaw, exists := c.Get("userId")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Unauthorized",
 			})
 			return
 		}
-		userIDFromToken, ok := sub.(uint)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Unauthorized",
-			})
-			return
-		}
-		userIDUint = uint64(userIDFromToken)
-	} else { // Admin role
-		userID := c.Param("id")
-		var err error
-		userIDUint, err = strconv.ParseUint(userID, 10, 64)
+		userIDUint = userIDFromTokenRaw.(uint)
+	} else {
+		userIDStr := c.Param("id")
+		userID, err := strconv.Atoi(userIDStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 			return
 		}
+		userIDUint = uint(userID)
 	}
 
 	var body UpdateKYCRequest
@@ -245,17 +255,14 @@ func UpdateKycByUserID(c *gin.Context) {
 		return
 	}
 
-	// If the user is not an admin, check if the requested user ID matches their own
-	if userRole == "USER" && userIDFromToken != uint(userIDUint) {
+	if userRole == "USER" && kyc.UserID != userIDUint {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Update KYC fields
 	kyc.FullName = body.FullName
 	kyc.MobileNumber = body.MobileNumber
 	kyc.FirmRegistered = body.FirmRegistered
-	// Update address fields if provided
 	if body.Address.Province != "" {
 		kyc.Address.Province = body.Address.Province
 	}
@@ -274,17 +281,26 @@ func UpdateKycByUserID(c *gin.Context) {
 	if body.Address.Longitude != "" {
 		kyc.Address.Longitude = body.Address.Longitude
 	}
-	// Update working area fields if provided
 	if body.WorkingArea.AreaName != "" {
 		kyc.WorkingArea.AreaName = body.WorkingArea.AreaName
 	}
-	if len(body.WorkingArea.Activities) > 0 {
-		kyc.WorkingArea.Activities = make([]models.Activity, len(body.WorkingArea.Activities))
-		for i, activityName := range body.WorkingArea.Activities {
-			kyc.WorkingArea.Activities[i] = models.Activity{ActivityName: activityName}
+	var activities []models.Activity
+	for _, activityReq := range body.WorkingArea.Activities {
+		activity := models.Activity{ActivityName: activityReq.ActivityName}
+
+		if len(activityReq.Items) > 0 {
+			var items []models.ActivityItem
+			for _, item := range activityReq.Items {
+				items = append(items, models.ActivityItem{Name: item})
+			}
+			activity.Items = items
 		}
+
+		activities = append(activities, activity)
 	}
-	// Update service fields if provided
+	kyc.WorkingArea.AreaName = body.WorkingArea.AreaName
+	kyc.WorkingArea.Activities = activities
+
 	if body.Service.ServiceName != "" {
 		kyc.Service.ServiceName = models.ServiceType(body.Service.ServiceName)
 	}
@@ -317,8 +333,13 @@ type UpdateKYCAddressRequest struct {
 }
 
 type UpdateKYCWorkingAreaRequest struct {
-	AreaName   string   `json:"area_name"`
-	Activities []string `json:"activities"`
+	AreaName   string                `json:"area_name"`
+	Activities []UpdateActivityItems `json:"activities"`
+}
+
+type UpdateActivityItems struct {
+	ActivityName string   `json:"activity_name"`
+	Items        []string `json:"items"`
 }
 
 type UpdateKYCServiceRequest struct {

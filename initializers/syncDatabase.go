@@ -8,6 +8,7 @@ func SyncDatabase() {
 	DB.AutoMigrate(&models.Address{})
 	DB.AutoMigrate(&models.WorkingArea{})
 	DB.AutoMigrate(&models.Activity{})
+	DB.AutoMigrate(&models.ActivityItem{})
 	DB.AutoMigrate(&models.Service{})
 
 }

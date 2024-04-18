@@ -18,11 +18,11 @@ func InitializeRoutes(r *gin.Engine) {
 		userRoutes.GET("/logout", controllers.Logout)
 		userRoutes.GET("/all", middleware.RequireAuth, controllers.GetUsers)
 		userRoutes.POST("/kyc/create", middleware.RequireAuth, controllers.Createkyc)
-		userRoutes.POST("/kyc/update/:id", middleware.RequireAuth, controllers.UpdateKycByUserID)
+		userRoutes.PUT("/kyc/update/:id", middleware.RequireAuth, controllers.UpdateKycByUserID)
 		userRoutes.GET("/kyc/:id", middleware.RequireAuth, controllers.GetKycByUserID)
 	}
 
-	r.GET("/search", controllers.Search)
+	r.GET("/search", controllers.SearchByEmail)
 	r.GET("/search/all", controllers.GlobalSearch)
 	r.GET("/search/advanced", controllers.AdvancedSearch)
 	r.GET("/search/address", controllers.AddressSearch)

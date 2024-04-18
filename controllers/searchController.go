@@ -20,7 +20,7 @@ import (
 // @Param q query string true "Search query"
 // @Success 200 {array} models.User "List of users matching the search query"
 // @Router /search [get]
-func Search(c *gin.Context) {
+func SearchByEmail(c *gin.Context) {
 	query := c.Query("q")
 
 	if query == "" {
@@ -37,7 +37,7 @@ func Search(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-// Search handles global search requests across all models
+// GlobalSearch handles global search requests across all models
 // @Summary Perform a global search across all models
 // @Description Perform a global search across all models
 // @Tags Search
@@ -161,8 +161,8 @@ func AddressSearch(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Addresses not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search addresses"})
+			return
 		}
-		return
 	}
 
 	// Initialize a slice to hold the results
@@ -179,10 +179,11 @@ func AddressSearch(c *gin.Context) {
 			Find(&workingArea).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Working area not found for the provided address"})
+				return
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve working area"})
+				return
 			}
-			return
 		}
 
 		// Retrieve activities associated with the working area
